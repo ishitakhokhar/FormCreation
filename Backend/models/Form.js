@@ -1,3 +1,5 @@
+// In backend/models/Form.js
+
 const mongoose = require("mongoose");
 
 const QuestionSchema = new mongoose.Schema({
@@ -9,13 +11,12 @@ const QuestionSchema = new mongoose.Schema({
   },
   options: [{ type: String }],
   isRequired: { type: Boolean, default: false },
+  // This is the updated section for conditional logic
   conditionalLogic: {
-    show: { type: Boolean, default: true },
-    dependentQuestion: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Question",
-    },
-    dependentOption: { type: String },
+    enabled: { type: Boolean, default: false },
+    dependentQuestion: { type: mongoose.Schema.Types.ObjectId },
+    condition: { type: String, enum: ["is equal to", "is not equal to"] },
+    value: { type: String },
   },
 });
 

@@ -52,6 +52,8 @@ exports.getFormById = async (req, res) => {
 // @desc    Add a question to a form
 // @route   POST /api/forms/:id/questions
 // @access  Private
+// In backend/controllers/formController.js
+
 exports.addQuestionToForm = async (req, res) => {
   const { questionText, questionType, options, isRequired, conditionalLogic } =
     req.body;
@@ -68,6 +70,18 @@ exports.addQuestionToForm = async (req, res) => {
         conditionalLogic,
       };
 
+      // ** FIX STARTS HERE **
+      // If conditional logic is enabled but no dependent question is selected,
+      // its value is an empty string which causes a database error.
+      // We change it to null to prevent the crash.
+      if (
+        newQuestion.conditionalLogic &&
+        !newQuestion.conditionalLogic.dependentQuestion
+      ) {
+        newQuestion.conditionalLogic.dependentQuestion = null;
+      }
+      // ** FIX ENDS HERE **
+
       form.questions.push(newQuestion);
       await form.save();
       res.status(201).json(form);
@@ -75,6 +89,8 @@ exports.addQuestionToForm = async (req, res) => {
       res.status(404).json({ message: "Form not found" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+    // Also, it's good practice to log the actual error on the server
+    console.error("ERROR SAVING QUESTION:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
