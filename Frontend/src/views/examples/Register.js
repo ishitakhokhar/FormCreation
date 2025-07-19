@@ -13,6 +13,7 @@ import {
   InputGroup,
   Row,
   Col,
+  Container,
 } from "reactstrap";
 
 const Register = () => {
@@ -46,7 +47,8 @@ const Register = () => {
 
   return (
     <>
-      <Col lg="6" md="8">
+      
+        <Col lg="6" md="8" className="mb-5">
         <Card className="bg-secondary shadow border-0">
           <CardBody className="px-lg-5 py-lg-5">
             <div className="text-center text-muted mb-4">
@@ -119,6 +121,7 @@ const Register = () => {
           </Col>
         </Row>
       </Col>
+     
     </>
   );
 };

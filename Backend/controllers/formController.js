@@ -94,3 +94,77 @@ exports.addQuestionToForm = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+exports.updateForm = async (req, res) => {
+  const { name, description, questions } = req.body; // Frontend sends updated name, description, and the FULL questions array
+
+  try {
+    const form = await Form.findById(req.params.id);
+
+    if (!form) {
+      return res.status(404).json({ message: 'Form not found' });
+    }
+
+    // Optional: Authorization check - only the form creator or an admin can update
+    // Assuming req.user is populated by your 'protect' middleware
+    if (form.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update this form' });
+    }
+
+    form.name = name !== undefined ? name : form.name; // Only update if provided
+    form.description = description !== undefined ? description : form.description; // Only update if provided
+
+    // Update the entire questions array. Mongoose handles sub-document validation.
+    if (questions !== undefined) {
+        // Basic validation: ensure it's an array
+        if (!Array.isArray(questions)) {
+            return res.status(400).json({ message: 'Questions must be an array.' });
+        }
+        form.questions = questions;
+    }
+
+
+    const updatedForm = await form.save();
+    res.json({ message: 'Form updated successfully', form: updatedForm });
+
+  } catch (error) {
+    console.error('Error updating form:', error);
+    // Mongoose validation errors often have `error.errors`
+    if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(val => val.message);
+        return res.status(400).json({ message: messages.join(', ') });
+    }
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+exports.getFormsCount = async (req, res) => {
+    try {
+        // Count forms created by the logged-in user
+        // This relies on req.user._id being available from your 'protect' middleware.
+        const count = await Form.countDocuments({ createdBy: req.user._id });
+        res.json({ count });
+    } catch (error) {
+        // IMPORTANT: Log the actual error for debugging!
+        console.error('Error counting forms in getFormsCount:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message }); // Send error.message for frontend debugging
+    }
+};
+exports.deleteForm = async (req, res) => {
+  try {
+    const form = await Form.findById(req.params.id);
+
+    if (!form) {
+      return res.status(404).json({ message: 'Form not found' });
+    }
+
+    // Authorization check
+    if (form.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete this form' });
+    }
+
+    await form.deleteOne(); // Use deleteOne() or remove()
+    res.json({ message: 'Form removed' });
+  } catch (error) {
+    console.error('Error deleting form:', error);
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};

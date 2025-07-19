@@ -17,7 +17,12 @@ root.render(
       <Route path="/admin/*" element={<AdminLayout />} />
       <Route path="/auth/*" element={<AuthLayout />} />
       {/* This line is changed to set the default page to the login screen */}
-      <Route path="*" element={<Navigate to="/auth/login" replace />} />
+      <Route path="*" element={
+        () => {
+          console.log("Root Router: Catch-all triggered, redirecting to /auth/login");
+          return <Navigate to="/auth/login" replace />;
+        }
+      } />
     </Routes>
   </BrowserRouter>
 );
